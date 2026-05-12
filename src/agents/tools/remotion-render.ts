@@ -1,4 +1,6 @@
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { existsSync } from "node:fs";
 import type { ShotPlan, VideoScript } from "../types";
 
 export interface RenderArgs {
@@ -7,6 +9,14 @@ export interface RenderArgs {
   shotPlan: ShotPlan;
   voiceoverPath: string;
   shotImagePaths: Record<string, string>;
+}
+
+function toFileUrl(p: string): string {
+  if (!p) return "";
+  if (p.startsWith("file://") || p.startsWith("http://") || p.startsWith("https://")) return p;
+  const abs = isAbsolute(p) ? p : join(process.cwd(), p);
+  if (!existsSync(abs)) return "";
+  return pathToFileURL(abs).href;
 }
 
 export interface RenderResult {
@@ -25,11 +35,18 @@ export async function renderVideo(args: RenderArgs): Promise<RenderResult> {
     const entryPoint = join(process.cwd(), "remotion", "index.ts");
     const bundleLocation = await bundle({ entryPoint });
 
+    const voiceoverUrl = args.voiceoverPath.endsWith(".mp3") ? toFileUrl(args.voiceoverPath) : "";
+    const shotImageUrls: Record<string, string> = {};
+    for (const [k, p] of Object.entries(args.shotImagePaths)) {
+      const url = toFileUrl(p);
+      if (url) shotImageUrls[k] = url;
+    }
+
     const inputProps = {
       script: args.script,
       shotPlan: args.shotPlan,
-      voiceoverPath: args.voiceoverPath,
-      shotImagePaths: args.shotImagePaths,
+      voiceoverPath: voiceoverUrl,
+      shotImagePaths: shotImageUrls,
     };
 
     const composition = await selectComposition({

@@ -1,4 +1,4 @@
-import { AbsoluteFill, Audio, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig, Sequence } from "remotion";
+import { AbsoluteFill, Audio, Img, interpolate, useCurrentFrame, useVideoConfig, Sequence } from "remotion";
 import type { ShotPlan, VideoScript } from "../src/agents/types";
 
 export type ShortVideoProps = {
@@ -26,7 +26,7 @@ export const ShortVideo: React.FC<ShortVideoProps> = ({ script, shotPlan, voiceo
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLOR_BG, color: COLOR_TEXT }}>
-      {hasAudio ? <Audio src={voiceoverPath.startsWith("/") ? voiceoverPath : staticFile(voiceoverPath)} /> : null}
+      {hasAudio ? <Audio src={voiceoverPath} /> : null}
 
       <HexGrid />
 
@@ -72,9 +72,9 @@ const BeatScene: React.FC<{
 
   return (
     <AbsoluteFill style={{ opacity: fadeIn, display: "flex", justifyContent: "center", alignItems: "center", padding: 80 }}>
-      {kind === "screencap" && imagePath && imagePath.endsWith(".png") ? (
+      {kind === "screencap" && imagePath ? (
         <AbsoluteFill style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <Img src={imagePath.startsWith("/") ? imagePath : staticFile(imagePath)} style={{
+          <Img src={imagePath} style={{
             maxWidth: "90%", maxHeight: "70%", border: `2px solid ${COLOR_ACCENT}55`, borderRadius: 24,
           }} />
         </AbsoluteFill>
