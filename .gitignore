@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+.env
+.env.local
+*.log
+data/
+output/
+!output/.gitkeep
+drizzle/
+.DS_Store
+next-env.d.ts
+tsconfig.tsbuildinfo
