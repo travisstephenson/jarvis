@@ -4,11 +4,16 @@ import { env } from "@/lib/env";
 let client: Anthropic | null = null;
 
 export function anthropic(): Anthropic {
-  if (!client) client = new Anthropic({ apiKey: env.anthropicApiKey() });
+  if (!client) {
+    client = new Anthropic({
+      apiKey: env.anthropicApiKey(),
+      maxRetries: 5,
+    });
+  }
   return client;
 }
 
-export const MODEL = "claude-opus-4-7";
+export const MODEL = "claude-sonnet-4-6";
 
 export async function callAgent(args: {
   system: string;
