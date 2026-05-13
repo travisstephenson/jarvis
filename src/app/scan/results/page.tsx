@@ -1,7 +1,7 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
@@ -23,15 +23,32 @@ import type { FlaggedItem } from "@/lib/types";
 
 const BUREAUS: Bureau[] = ["Experian", "Equifax", "TransUnion"];
 
-export default function ResultsPage() {
-  const params = useParams<{ reportId: string }>();
+export default function Page() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <ResultsPage />
+    </Suspense>
+  );
+}
+
+function LoadingSpinner() {
+  return (
+    <div className="flex-1 flex items-center justify-center py-20">
+      <span className="inline-block h-6 w-6 border-2 border-[color:var(--color-primary)] border-t-transparent rounded-full spin-slow" />
+    </div>
+  );
+}
+
+function ResultsPage() {
+  const searchParams = useSearchParams();
+  const reportId = searchParams.get("r") ?? "";
   const router = useRouter();
   const { state, ready, markPaid } = useStore();
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [letterOpen, setLetterOpen] = useState(false);
 
-  const report = state.reports.find((r) => r.id === params.reportId);
-  const progress = state.progress[params.reportId];
+  const report = state.reports.find((r) => r.id === reportId);
+  const progress = state.progress[reportId];
   const flagged = progress?.flagged ?? [];
 
   const groupedByTradeline = useMemo(() => {
@@ -49,17 +66,12 @@ export default function ResultsPage() {
   }, [ready, state.user, report, router]);
 
   if (!ready || !state.user || !report || !progress) {
-    return (
-      <div className="flex-1 flex items-center justify-center py-20">
-        <span className="inline-block h-6 w-6 border-2 border-[color:var(--color-primary)] border-t-transparent rounded-full spin-slow" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   const totalItems = groupedByTradeline.size;
   const paid = progress.paid;
 
-  // No disputes path
   if (totalItems === 0) {
     return (
       <div className="flex-1 py-10">
@@ -84,7 +96,6 @@ export default function ResultsPage() {
   return (
     <div className="flex-1 py-8 sm:py-12">
       <div className="app-container md:max-w-3xl">
-        {/* Header */}
         <header className="mb-6">
           <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
             <SparklesIcon size={14} /> Scan complete
@@ -99,14 +110,12 @@ export default function ResultsPage() {
           </p>
         </header>
 
-        {/* Summary tiles */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           <Tile value={totalItems.toString()} label="Items flagged" tone="warning" />
           <Tile value={flagged.length.toString()} label="FCRA violations" tone="primary" />
           <Tile value={report.tradelines.length.toString()} label="Accounts scanned" tone="neutral" />
         </div>
 
-        {/* Primary CTA bar */}
         {paid ? (
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-[color:var(--color-primary)]/30 bg-[color:var(--color-primary-soft)] p-4">
             <div className="flex items-center gap-3">
@@ -126,7 +135,6 @@ export default function ResultsPage() {
           </div>
         )}
 
-        {/* Items list */}
         <div className="space-y-3">
           {Array.from(groupedByTradeline.entries()).map(([tradelineId, items]) => {
             const t = report.tradelines.find((x) => x.id === tradelineId);
@@ -181,7 +189,6 @@ export default function ResultsPage() {
         )}
       </div>
 
-      {/* Paywall modal */}
       <Modal open={paywallOpen} onClose={() => setPaywallOpen(false)} title="Unlock your results">
         <PaywallCheckout
           itemsCount={totalItems}
@@ -192,7 +199,6 @@ export default function ResultsPage() {
         />
       </Modal>
 
-      {/* Letter modal */}
       <Modal open={letterOpen} onClose={() => setLetterOpen(false)} title="Your dispute letters" maxWidth="max-w-3xl">
         <LettersView reportId={report.id} />
       </Modal>
@@ -375,7 +381,6 @@ function LettersView({ reportId }: { reportId: string }) {
 
   return (
     <div className="p-4 sm:p-5">
-      {/* Bureau tabs */}
       <div className="flex gap-1 p-1 bg-[color:var(--color-surface-muted)] rounded-lg overflow-x-auto no-scrollbar">
         {BUREAUS.map((b) => (
           <button

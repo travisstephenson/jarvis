@@ -1,7 +1,8 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -42,13 +43,30 @@ function questionsForTradeline(t: Tradeline): { key: QKey; text: string }[] {
   ];
 }
 
-export default function WizardPage() {
-  const params = useParams<{ reportId: string }>();
+export default function Page() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <WizardPage />
+    </Suspense>
+  );
+}
+
+function LoadingSpinner() {
+  return (
+    <div className="flex-1 flex items-center justify-center py-20">
+      <span className="inline-block h-6 w-6 border-2 border-[color:var(--color-primary)] border-t-transparent rounded-full spin-slow" />
+    </div>
+  );
+}
+
+function WizardPage() {
+  const searchParams = useSearchParams();
+  const reportId = searchParams.get("r") ?? "";
   const router = useRouter();
   const { state, ready, setAnswer, setFlagged, setCurrentIndex } = useStore();
 
-  const report = state.reports.find((r) => r.id === params.reportId);
-  const progress = state.progress[params.reportId];
+  const report = state.reports.find((r) => r.id === reportId);
+  const progress = state.progress[reportId];
   const idx = progress?.currentIndex ?? 0;
   const tradeline = report?.tradelines[idx];
   const tlAnswers = (tradeline && progress?.answers[tradeline.id]) || {};
@@ -65,20 +83,14 @@ export default function WizardPage() {
   }, [ready, state.user, report, router]);
 
   if (!ready || !state.user || !report || !tradeline) {
-    return (
-      <div className="flex-1 flex items-center justify-center py-20">
-        <span className="inline-block h-6 w-6 border-2 border-[color:var(--color-primary)] border-t-transparent rounded-full spin-slow" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   const total = report.tradelines.length;
   const isLast = idx === total - 1;
   const questions = questionsForTradeline(tradeline);
 
-  // The current question is the first unanswered one.
   const answeredCount = questions.filter((q) => tlAnswers[q.key] !== undefined).length;
-  // Once "isMine" is "no", subsequent questions are skipped.
   const shortCircuit = tlAnswers.isMine === "no";
   const visibleQuestions = shortCircuit ? questions.slice(0, 1) : questions.slice(0, answeredCount + 1);
   const allAnswered = shortCircuit || answeredCount >= questions.length;
@@ -88,7 +100,6 @@ export default function WizardPage() {
   }
 
   function recomputeAndAdvance(direction: 1 | -1) {
-    // Recompute flagged items for the whole report after every step.
     const updatedAnswers = progress?.answers ?? {};
     const flagged = report!.tradelines.flatMap((t) =>
       evaluateTradeline(t, updatedAnswers[t.id])
@@ -97,7 +108,7 @@ export default function WizardPage() {
 
     const nextIdx = idx + direction;
     if (direction === 1 && isLast) {
-      router.push(`/scan/results/${report!.id}`);
+      router.push(`/scan/results?r=${report!.id}`);
       return;
     }
     if (nextIdx >= 0 && nextIdx < total) {
@@ -107,7 +118,6 @@ export default function WizardPage() {
 
   return (
     <div className="flex-1 bg-[color:var(--color-background)]">
-      {/* Slim header */}
       <div className="sticky top-0 z-20 bg-[color:var(--color-surface)]/95 backdrop-blur border-b border-[color:var(--color-border)]">
         <div className="app-container md:max-w-2xl flex items-center gap-3 h-14">
           <Link
@@ -137,7 +147,6 @@ export default function WizardPage() {
       </div>
 
       <div className="app-container md:max-w-2xl py-6">
-        {/* Tradeline card */}
         <Card className="p-5 fade-in" key={tradeline.id}>
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -166,7 +175,6 @@ export default function WizardPage() {
           </div>
         </Card>
 
-        {/* Questions */}
         <div className="mt-4 space-y-3">
           {visibleQuestions.map((q, qi) => {
             const value = tlAnswers[q.key];
@@ -200,7 +208,6 @@ export default function WizardPage() {
           })}
         </div>
 
-        {/* Live feedback if items flagged */}
         {liveFlags.length > 0 && (
           <div className="mt-4 rounded-xl border border-[color:var(--color-warning)]/30 bg-[color:var(--color-warning-soft)] p-4 fade-in">
             <div className="flex items-center gap-2 font-semibold text-[color:var(--color-warning)]">
@@ -223,7 +230,6 @@ export default function WizardPage() {
           </div>
         )}
 
-        {/* Wizard nav */}
         <div className="mt-6 flex items-center justify-between gap-3">
           <Button
             variant="outline"

@@ -47,7 +47,7 @@ export default function ScanPage() {
     const report = createSampleReport(state.user.id);
     addReport(report);
     setLoading(false);
-    router.push(`/scan/wizard/${report.id}`);
+    router.push(`/scan/wizard?r=${report.id}`);
   }
 
   function onFileChosen(e: React.ChangeEvent<HTMLInputElement>) {
@@ -119,10 +119,10 @@ export default function ScanPage() {
                   ? { label: "Review ready", color: "var(--color-primary)" }
                   : { label: "In progress", color: "var(--color-muted-foreground)" };
                 const continueHref = progress?.paid
-                  ? `/scan/results/${r.id}`
+                  ? `/scan/results?r=${r.id}`
                   : progress && progress.flagged.length > 0 && progress.currentIndex >= r.tradelines.length - 1
-                  ? `/scan/results/${r.id}`
-                  : `/scan/wizard/${r.id}`;
+                  ? `/scan/results?r=${r.id}`
+                  : `/scan/wizard?r=${r.id}`;
                 return (
                   <div key={r.id} className="flex items-center gap-3 px-4 sm:px-5 py-4">
                     <div className="h-10 w-10 rounded-lg bg-[color:var(--color-surface-muted)] text-[color:var(--color-foreground)] inline-flex items-center justify-center shrink-0">

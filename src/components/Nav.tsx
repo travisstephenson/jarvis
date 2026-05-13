@@ -15,7 +15,7 @@ export function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Hide nav on wizard for focus.
-  const hideOnWizard = pathname?.includes("/scan/wizard/");
+  const hideOnWizard = pathname?.includes("/scan/wizard");
   if (hideOnWizard) return null;
 
   const isAuthed = ready && !!state.user;
