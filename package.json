@@ -1,5 +1,5 @@
 {
-  "name": "jarvis",
+  "name": "legalscan",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,33 +8,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "db:push": "drizzle-kit push",
-    "remotion:studio": "remotion studio remotion/index.ts",
-    "remotion:render": "remotion render remotion/index.ts ShortVideo output/preview.mp4"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.40.0",
-    "@remotion/bundler": "^4.0.250",
-    "@remotion/cli": "^4.0.250",
-    "@remotion/renderer": "^4.0.250",
-    "better-sqlite3": "^11.7.0",
-    "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.38.0",
     "next": "^15.1.0",
-    "playwright": "^1.49.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "remotion": "^4.0.250",
-    "zod": "^3.24.0"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.12",
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@tailwindcss/postcss": "^4.0.0",
-    "drizzle-kit": "^0.30.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0"
   }

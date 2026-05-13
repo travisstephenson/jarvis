@@ -1,48 +1,75 @@
-# JARVIS — Content Distribution Engine (Phase 0)
+# LegalScan — Frontend Prototype
 
-Multi-agent short-form video pipeline for product promotion. Local-first scaffold.
+Mobile-first responsive web app that scans a credit report for legally disputable
+errors and generates dispute letters. Frontend-only with mock data — no backend
+wired up yet.
 
 ## Quick start
 
 ```sh
 npm install
-npx playwright install chromium
-cp .env.example .env
-# Add ANTHROPIC_API_KEY (required) and ELEVENLABS_API_KEY + voice IDs (optional)
 npm run dev
 ```
 
-Open http://localhost:3000 and click **GENERATE TODAY**.
+Open http://localhost:3000 in a browser (resize to phone width for the intended
+look, or open dev tools → device mode).
 
-## Pipeline
+## Demo flow
 
-5 agents, orchestrated by `src/agents/orchestrator.ts`:
+1. Landing page (`/`)
+2. Click **Start Your Free Legal Scan** → `/signup`
+3. Any email + password works (or **Sign up with Google** for instant demo) →
+   redirects to `/scan`
+4. Click **Use sample report** → wizard at `/scan/wizard/[reportId]`
+5. Walk through the 10-account sample report answering the Q&A
+6. Final screen at `/scan/results/[reportId]` shows flagged items behind a paywall
+7. Click **Unlock** → mock checkout → unlocked results
+8. **Generate my dispute letters** → modal with Experian / Equifax / TransUnion
+   letters, copy and download as `.txt`
 
-1. **Strategist** — proposes 3 daily hook concepts.
-2. **Scriptwriter** — expands the chosen hook into a 30-45s vertical script.
-3. **Visual Director** — turns the script into a shot list (screencaps vs. cards).
-4. **Producer** — synthesizes voiceover (ElevenLabs), captures pages (Playwright), renders MP4 (Remotion).
-5. **Reviewer** — scores the run against 5 criteria and decides ship/revise.
+State is persisted in `localStorage` so refresh-resume works. Wipe it via
+**Settings → Delete my account**.
 
-Events stream live to the HUD over SSE.
+## Stack
 
-## Outputs
+- Next.js 15 (App Router) + React 19
+- Tailwind CSS v4 (CSS-first tokens in `globals.css`)
+- Lora (headings) + Inter (UI) from Google Fonts
+- Zero runtime dependencies beyond React/Next — icons are inline SVG
+- No backend yet: mock store under `src/lib/store.tsx`, mock data under
+  `src/lib/mock-data.ts`, rules engine under `src/lib/rules-engine.ts`
 
-Each run drops into `output/run_<timestamp>_<uuid>/`:
-- `hooks.json` — strategist candidates
-- `script.json` — final voiceover script
-- `shot-plan.json` — visual director output
-- `voiceover.mp3` (or `.stub.json` if ElevenLabs not configured)
-- `shot-XX.png` — Playwright screen captures
-- `video.mp4` — final rendered vertical video
-- `review.json` — reviewer scores
+## File layout
 
-Pickup is manual: drag the MP4 + caption into TikTok / Reels / Shorts.
+```
+src/
+  app/
+    page.tsx                          # landing
+    login/page.tsx
+    signup/page.tsx
+    scan/page.tsx                     # dashboard
+    scan/wizard/[reportId]/page.tsx   # Q&A wizard
+    scan/results/[reportId]/page.tsx  # results + paywall + letters
+    settings/page.tsx
+    privacy/page.tsx
+    terms/page.tsx
+  components/
+    ui/Button.tsx, Card.tsx, Modal.tsx
+    Nav.tsx, Footer.tsx, Logo.tsx
+    landing/FAQ.tsx
+    auth/AuthShell.tsx
+    icons.tsx
+  lib/
+    types.ts
+    mock-data.ts        # sample 10-tradeline credit report
+    rules-engine.ts     # FCRA-grounded dispute detection
+    letters.ts          # bureau-specific letter template
+    store.tsx           # localStorage-backed React context
+```
 
-## Status
+## Next steps when you're ready for backend
 
-- ✅ Headless content engine (siteamoeba profile hardcoded)
-- ✅ Web HUD with live event stream
-- ⏳ Voice input (Web Speech API + ElevenLabs)
-- ⏳ Multi-product profiles
-- ⏳ Auto-posting (deliberately deferred — requires platform API approval)
+The spec (`Legal_Dispute_Scanner_gameplan.pdf`) calls for Supabase + Stripe.
+The frontend is structured so each side-effect (`signIn`, `addReport`,
+`markPaid`, etc.) goes through the store and can be swapped to Supabase calls
+without touching the page components.
